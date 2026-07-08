@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pyo
+survey_responses.jsonl
+sample_report.html
+.tmp/

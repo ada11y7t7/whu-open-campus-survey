@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta property="og:title" content="武汉大学开放入校政策影响调研">
+<meta property="og:description" content="关于武大取消入校预约后实际影响的匿名问卷">
+<title>武大开放入校政策影响调研</title>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #f0f2f5; color: #2c3e50; line-height: 1.6;
+  min-height: 100vh; display: flex; justify-content: center;
+}
+#app {
+  width: 100%; max-width: 600px; min-height: 100vh;
+  background: #fff; position: relative; overflow: hidden;
+}
+
+/* ===== Progress Bar ===== */
+#progress-wrap {
+  position: sticky; top: 0; z-index: 10;
+  background: #fff; padding: 16px 20px 8px;
+  border-bottom: 1px solid #eee;
+}
+#progress-bar {
+  height: 4px; background: #e8ecf1; border-radius: 2px; overflow: hidden;
+}
+#progress-fill {
+  height: 100%; background: linear-gradient(90deg, #1a5276, #2e86c1);
+  border-radius: 2px; transition: width .35s ease;
+}
+#progress-text {
+  font-size: 12px; color: #95a5a6; text-align: right; margin-top: 4px;
+}
+
+/* ===== Step Card ===== */
+.step { display: none; padding: 24px 20px 80px; animation: fadeIn .3s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.step-title {
+  font-size: 18px; font-weight: 700; color: #1a1a2e;
+  margin-bottom: 6px; line-height: 1.4;
+}
+.step-subtitle { font-size: 13px; color: #95a5a6; margin-bottom: 20px; }
+
+/* ===== Options ===== */
+.option-list { display: flex; flex-direction: column; gap: 10px; }
+.option-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 13px 15px; border: 1.5px solid #e0e5ec; border-radius: 10px;
+  cursor: pointer; transition: all .15s ease; background: #fafbfc;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.option-item:active { background: #eef4fb; }
+.option-item.selected { border-color: #2e86c1; background: #eaf4fd; }
+.option-item input { display: none; }
+.option-radio {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid #c8cfd8;
+  flex-shrink: 0; margin-top: 1px; transition: all .15s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+.option-item.selected .option-radio {
+  border-color: #2e86c1; background: #2e86c1;
+}
+.option-item.selected .option-radio::after {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff;
+}
+.option-check {
+  width: 20px; height: 20px; border-radius: 4px; border: 2px solid #c8cfd8;
+  flex-shrink: 0; margin-top: 1px; transition: all .15s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+.option-item.selected .option-check {
+  border-color: #2e86c1; background: #2e86c1;
+}
+.option-item.selected .option-check::after {
+  content: '✓'; color: #fff; font-size: 13px; font-weight: 700;
+}
+.option-label { font-size: 15px; flex: 1; }
+
+/* ===== Scale ===== */
+.scale-row { display: flex; gap: 6px; justify-content: space-between; }
+.scale-btn {
+  flex: 1; text-align: center; padding: 12px 4px; border: 1.5px solid #e0e5ec;
+  border-radius: 8px; background: #fafbfc; font-size: 13px; cursor: pointer;
+  transition: all .15s ease; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.scale-btn.selected { border-color: #2e86c1; background: #eaf4fd; font-weight: 600; }
+.scale-labels { display: flex; justify-content: space-between; font-size: 11px; color: #95a5a6; margin-top: 6px; }
+.scale-labels span { flex: 1; text-align: center; }
+
+/* ===== Text Input ===== */
+.text-input {
+  width: 100%; padding: 13px 15px; border: 1.5px solid #e0e5ec; border-radius: 10px;
+  font-size: 15px; font-family: inherit; background: #fafbfc; outline: none;
+  transition: border-color .15s ease; resize: vertical;
+}
+.text-input:focus { border-color: #2e86c1; background: #fff; }
+.text-input-sm {
+  width: 100%; padding: 10px 12px; border: 1.5px solid #e0e5ec; border-radius: 8px;
+  font-size: 14px; font-family: inherit; background: #fafbfc; outline: none;
+  margin-top: 8px; display: none;
+}
+.text-input-sm.visible { display: block; }
+
+/* ===== Follow-up question ===== */
+.follow-up {
+  margin-top: 12px; padding: 12px 15px; background: #fef9e7; border-radius: 8px;
+  border-left: 3px solid #f39c12; display: none;
+}
+.follow-up.visible { display: block; }
+.follow-up .fu-title { font-size: 13px; color: #7d6608; margin-bottom: 8px; font-weight: 600; }
+
+/* ===== Bottom Nav ===== */
+#nav-wrap {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 600px; padding: 12px 20px;
+  background: #fff; border-top: 1px solid #eee; z-index: 10;
+  display: flex; gap: 10px;
+}
+.btn {
+  padding: 13px 24px; border-radius: 10px; font-size: 15px; font-weight: 600;
+  cursor: pointer; border: none; transition: all .15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-prev {
+  background: #f0f2f5; color: #666; flex: 0 0 auto;
+}
+.btn-next {
+  background: #1a5276; color: #fff; flex: 1;
+}
+.btn-next:disabled { background: #ccc; cursor: not-allowed; }
+.btn-submit {
+  background: #27ae60; color: #fff; flex: 1;
+}
+
+/* ===== Welcome / Thank You ===== */
+.hero {
+  text-align: center; padding: 40px 20px;
+}
+.hero-icon { font-size: 56px; margin-bottom: 16px; }
+.hero h1 { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+.hero p { font-size: 14px; color: #666; line-height: 1.7; }
+.hero .notice {
+  margin-top: 20px; padding: 14px 16px; background: #fef9e7; border-radius: 10px;
+  font-size: 13px; color: #7d6608; text-align: left; line-height: 1.7;
+}
+
+/* ===== Misc ===== */
+.error-msg { color: #e74c3c; font-size: 13px; margin-top: 6px; display: none; }
+.error-msg.visible { display: block; }
+.age-input {
+  width: 120px; padding: 13px 15px; border: 1.5px solid #e0e5ec; border-radius: 10px;
+  font-size: 18px; text-align: center; font-family: inherit; background: #fafbfc; outline: none;
+  transition: border-color .15s ease;
+}
+.age-input:focus { border-color: #2e86c1; background: #fff; }
+.age-wrap { text-align: center; margin: 10px 0; }
+.age-unit { font-size: 15px; color: #666; margin-left: 6px; }
+
+/* ===== Unable-to-answer ===== */
+.option-item.ua-option { border-style: dashed; border-color: #d5d8dc; background: #fdfdfd; }
+.option-item.ua-option.selected { border-color: #bdc3c7; background: #f5f6f8; }
+.ua-explain { margin-top: 8px; display: none; }
+.ua-explain.visible { display: block; }
+
+/* ===== Responsive ===== */
+@media (max-width: 380px) {
+  .step-title { font-size: 16px; }
+  .option-item { padding: 11px 12px; }
+  .option-label { font-size: 14px; }
+  .scale-btn { font-size: 12px; padding: 10px 2px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="progress-wrap">
+    <div id="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+    <div id="progress-text"></div>
+  </div>
+  <div id="step-container"></div>
+  <div id="nav-wrap">
+    <button id="btn-prev" class="btn btn-prev" style="display:none">← 上一题</button>
+    <button id="btn-next" class="btn btn-next">开始填写</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// QUESTION BANK
+// ============================================================
+const BANK = {
+  A: [
+    { id:'A1', type:'single', title:'您是否感觉开放后校园人流量发生了变化？', options:['明显增加','略有增加','基本没变化','减少','不清楚'] },
+    { id:'A2', type:'scale', title:'您认为开放后校园整体秩序如何？', scaleLabels:['非常差','较差','一般','较好','非常好'] },
+    { id:'A3', type:'single', title:'您是否遇到过外来人员干扰正常学习/工作/生活的情况？', options:['经常','偶尔','很少','从未'] },
+    { id:'A4', type:'multi', title:'如果有干扰，主要体现在哪些方面？', options:['噪音喧哗','拍照占道','食堂排队加剧','校园交通拥堵','环境卫生变差','占座或占用学习空间（图书馆、自习室等）','进出教学楼/办公区影响教学秩序','其他','没有受到干扰'] },
+  ],
+  B: [
+    { id:'B1', type:'single', title:'总体来看，您支持目前的开放政策吗？', options:['非常支持','比较支持','一般','不太支持','完全不支持'] },
+    { id:'B2', type:'scale', title:'您认为大学校园应当承担向社会开放的功能吗？', scaleLabels:['非常不同意','不同意','一般','同意','非常同意'] },
+    { id:'B3', type:'single', title:'如果要调整现行政策，您最希望优先解决什么问题？', options:['限制每日入校人流量','划定游客禁入区域（如图书馆、教学楼、宿舍区）','加强校内巡查和管理力度','设立游客专用通道或动线','增设明确的引导标识和信息提示','不需要调整','其他'] },
+  ],
+  C: [
+    { id:'C1', type:'single', title:'开放后，您进入武大校园（或在校园内活动）的频率是否发生变化？', options:['明显增加','略有增加','没变化','减少'], followUp:{ trigger:'减少', title:'减少的主要原因是？', options:['人太多，主动避开','安全顾虑','校园环境变差','与课程/工作无关，本来就不常来','其他'] } },
+    { id:'C3', type:'single', title:'您感觉外来人员带来的影响在什么时段最明显？', options:['周末及节假日','工作日','无明显时间区别','不清楚'] },
+  ],
+  D: [
+    { id:'D1', type:'scale', title:'您认为目前校园的管理力度如何？', scaleLabels:['很不足','不足','一般','较好','很好'] },
+    { id:'D2', type:'multi', title:'您在校园内是否见过以下现象？<br><small style="color:#95a5a6">（本题了解客观现象，与是否对您造成困扰不同）</small>', options:['商业拍摄（婚纱、产品广告等）','网络直播','推销或散发传单','无人机飞行','大规模聚集拍照','游客进入教学楼/图书馆','都没见过'] },
+    { id:'D3', type:'multi', title:'您认为目前校园管理在哪些方面最需要加强？', options:['游客引导与分流','人流总量控制','卫生清洁维护','安保巡逻力度','教学区/生活区的物理隔离（刷卡门禁）','游览路线规划与标识','线上/线下信息提示','商业行为管理（直播、拍摄、推销）','不需要加强','其他'] },
+  ],
+  E1: { id:'E1', type:'single', title:'您来武汉大学的主要目的是什么？', options:['参观校园风光','感受大学文化氛围','拍照打卡','锻炼、散步、休闲','探访在校师生或朋友','参加校内活动（讲座、展览、招聘等）','借道通行','其他'] },
+  E2: { id:'E2', type:'multi', title:'据您观察，外来公众进入校园主要在做什么？', options:['参观校园风光','拍照打卡','锻炼、散步、休闲','带家人朋友游览','参加校内活动','商业行为（直播、拍摄、推销）','借道通行','不太清楚','其他'] },
+  F: [
+    { id:'F1', type:'single', title:'总体来看，您认为开放政策带来的影响是？', options:['利大于弊','略利于弊','利弊相当','略弊于利','弊大于利'] },
+    { id:'F2', type:'single', title:'您是否希望继续保持目前的开放模式？', options:['愿意，保持现状即可','不愿意，应当收紧','视后续管理改善效果而定'] },
+    { id:'F3', type:'scale', title:'您认为武汉大学开放后，对武汉市的城市形象是否有积极作用？', scaleLabels:['非常消极','较消极','一般','较积极','非常积极'] },
+  ],
+};
+
+const C2_QUESTION = {
+  id:'C2', type:'single', title:'您认为校园环境（安静程度、卫生状况等）相比开放前如何？', options:['明显变差','略有变差','没变化','略有改善','明显改善']
+};
+
+const G_QUESTIONS = [
+  { id:'G1', type:'text', title:'您感受到的、开放后最大的变化是什么？', subtitle:'一两句话即可，选填', placeholder:'请输入...' },
+  { id:'G2', type:'text', title:'您对校园管理有什么具体建议？', subtitle:'选填', placeholder:'请输入...' },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let answers = {};           // { questionId: value }
+let uaExplanations = {};    // { questionId: "explanation text" }
+let allSteps = [];          // ordered list of step definition objects
+let currentIdx = 0;
+let submitted = false;
+
+// ============================================================
+// BUILD STEPS
+// ============================================================
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function buildSteps() {
+  const steps = [];
+
+  // --- Welcome ---
+  steps.push({ type:'welcome' });
+
+  // --- Part 1: Basic Info ---
+  steps.push({
+    id:'Q1', type:'single', title:'Q1. 您的身份是？', section:'基础信息',
+    options:['武汉大学本科生','武汉大学研究生','武汉大学教职工','校友','社会公众','其他'],
+    required:true
+  });
+  steps.push({
+    id:'Q2', type:'age', title:'Q2. 您的年龄是？', section:'基础信息',
+    subtitle:'请直接填写数字，后期我们会按区间分组统计',
+    required:true
+  });
+  steps.push({
+    id:'Q3', type:'single', title:'Q3. 您的性别是？', section:'基础信息',
+    options:['男','女','不愿透露'],
+    required:true, noUA:true  // "不愿透露" itself is the skip option
+  });
+  steps.push({
+    id:'Q4', type:'single', title:'Q4. 取消预约制<strong>之前</strong>，您是否来过武汉大学？', section:'基础信息',
+    options:['是','否'],
+    required:true
+  });
+
+  // --- Part 2: Themed Questions (6 dimensions, 1 each) ---
+  const dimOrder = shuffle(['A','B','C','D','E','F']);
+  for (const dim of dimOrder) {
+    if (dim === 'E') {
+      // Identity-based routing will be resolved at render time
+      steps.push({ type:'e-dim' });
+    } else {
+      const q = pickRandom(BANK[dim]);
+      steps.push({
+        id: q.id, type: q.type, title: q.title,
+        options: q.options, scaleLabels: q.scaleLabels,
+        followUp: q.followUp, section:'主题问卷',
+        required:false
+      });
+    }
+  }
+
+  // --- Part 3: C2 (conditional) ---
+  steps.push({ type:'c2-conditional' });
+
+  // --- Part 4: Open-ended ---
+  for (const gq of G_QUESTIONS) {
+    steps.push({
+      id: gq.id, type: gq.type, title: gq.title,
+      subtitle: gq.subtitle, placeholder: gq.placeholder,
+      section:'开放题', required:false
+    });
+  }
+
+  // --- Interview recruitment ---
+  steps.push({ type:'recruit' });
+
+  // --- Thank you ---
+  steps.push({ type:'thankyou' });
+
+  return steps;
+}
+
+// Resolve E-dimension question based on Q1 answer
+function resolveEQuestion() {
+  const identity = answers['Q1'];
+  const isInsider = ['武汉大学本科生','武汉大学研究生','武汉大学教职工'].includes(identity);
+  const eq = isInsider ? BANK.E2 : BANK.E1;
+  return {
+    id: eq.id, type: eq.type, title: eq.title, options: eq.options,
+    section:'主题问卷', required:false
+  };
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const container = document.getElementById('step-container');
+const progressFill = document.getElementById('progress-fill');
+const progressText = document.getElementById('progress-text');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
+function render() {
+  if (currentIdx >= allSteps.length) { currentIdx = allSteps.length - 1; }
+  const step = allSteps[currentIdx];
+
+  // Resolve dynamic steps
+  let resolvedStep = step;
+  if (step.type === 'e-dim') {
+    resolvedStep = resolveEQuestion();
+    allSteps[currentIdx] = resolvedStep; // cache resolved
+  }
+  if (step.type === 'c2-conditional') {
+    if (answers['Q4'] === '是') {
+      resolvedStep = {
+        id: C2_QUESTION.id, type: C2_QUESTION.type, title: C2_QUESTION.title,
+        options: C2_QUESTION.options, section:'补充问题', required:false
+      };
+      allSteps[currentIdx] = resolvedStep;
+    } else {
+      // Skip this step entirely
+      allSteps.splice(currentIdx, 1);
+      render();
+      return;
+    }
+  }
+
+  // Progress
+  const total = allSteps.length;
+  const pct = Math.round((currentIdx / (total - 1)) * 100);
+  progressFill.style.width = pct + '%';
+  progressText.textContent = resolvedStep.section
+    ? `${currentIdx}/${total - 1}  ·  ${resolvedStep.section}`
+    : `${currentIdx}/${total - 1}`;
+
+  // Build HTML
+  let html = '';
+  if (resolvedStep.type === 'welcome') {
+    html = renderWelcome();
+  } else if (resolvedStep.type === 'thankyou') {
+    html = renderThankYou();
+  } else if (resolvedStep.type === 'recruit') {
+    html = renderRecruit();
+  } else if (resolvedStep.type === 'age') {
+    html = renderAge(resolvedStep);
+  } else if (resolvedStep.type === 'text') {
+    html = renderText(resolvedStep);
+  } else {
+    html = renderChoice(resolvedStep);
+  }
+
+  container.innerHTML = `<div class="step active">${html}</div>`;
+
+  // Buttons
+  if (resolvedStep.type === 'welcome') {
+    btnPrev.style.display = 'none';
+    btnNext.textContent = '开始填写';
+    btnNext.className = 'btn btn-next';
+    btnNext.disabled = false;
+  } else if (resolvedStep.type === 'thankyou') {
+    btnPrev.style.display = 'none';
+    btnNext.style.display = 'none';
+    document.getElementById('progress-wrap').style.display = 'none';
+  } else {
+    btnPrev.style.display = currentIdx > 1 ? 'inline-block' : 'none';
+    btnNext.style.display = 'inline-block';
+    if (currentIdx === total - 2) {
+      btnNext.textContent = '提交问卷';
+      btnNext.className = 'btn btn-submit';
+    } else {
+      btnNext.textContent = '下一题 →';
+      btnNext.className = 'btn btn-next';
+    }
+    updateNextButton(resolvedStep);
+  }
+
+  // Bind events
+  bindEvents(resolvedStep);
+}
+
+function renderWelcome() {
+  return `
+    <div class="hero">
+      <div class="hero-icon">🏫</div>
+      <h1>武汉大学<br>开放入校政策影响调研</h1>
+      <p style="margin-top:12px">
+        今年5月，武汉大学取消了社会公众入校预约制度，公众可凭身份证刷证入校。<br><br>
+        我们希望了解这一政策实施后的实际影响，为校园管理优化和相关研究提供参考。
+      </p>
+      <div class="notice">
+        📌 <strong>填写说明</strong><br>
+        · 本问卷<strong>完全匿名</strong>，不收集任何个人身份信息<br>
+        · 预计耗时约 <strong>2—3 分钟</strong><br>
+        · 每道选择题末尾均设有<strong>"无法回答"</strong>选项<br>
+        · 末尾开放题选填，但每一条建议对我们都非常宝贵
+      </div>
+    </div>
+  `;
+}
+
+function renderAge(step) {
+  const val = answers[step.id] || '';
+  return `
+    <div class="step-title">${step.title}</div>
+    ${step.subtitle ? `<div class="step-subtitle">${step.subtitle}</div>` : ''}
+    <div class="age-wrap">
+      <input type="number" class="age-input" id="age-input" value="${val}"
+        placeholder="如 21" min="1" max="120" inputmode="numeric">
+      <span class="age-unit">岁</span>
+    </div>
+    <div class="error-msg" id="error-msg">请输入有效的年龄（1—120）</div>
+  `;
+}
+
+function renderText(step) {
+  const val = answers[step.id] || '';
+  return `
+    <div class="step-title">${step.title}</div>
+    ${step.subtitle ? `<div class="step-subtitle">${step.subtitle}</div>` : ''}
+    <textarea class="text-input" id="text-input" rows="3"
+      placeholder="${step.placeholder || '请输入...'}">${val}</textarea>
+  `;
+}
+
+function typeBadge(type) {
+  if (type === 'multi') return '<span style="display:inline-block;background:#eaf4fd;color:#2e86c1;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;font-weight:500;">多选</span>';
+  if (type === 'scale' || type === 'single') return '<span style="display:inline-block;background:#f0fef0;color:#27ae60;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;font-weight:500;">单选</span>';
+  return '';
+}
+
+function renderChoice(step) {
+  const val = answers[step.id];
+  const isUA = val === '__UNABLE_TO_ANSWER__';
+  let html = `<div class="step-title">${step.title}${typeBadge(step.type)}</div>`;
+  if (step.subtitle) html += `<div class="step-subtitle">${step.subtitle}</div>`;
+
+  if (step.type === 'scale') {
+    html += renderScale(step, val, isUA);
+  } else if (step.type === 'multi') {
+    html += renderMulti(step, val, isUA);
+  } else {
+    html += renderSingle(step, val, isUA);
+  }
+
+  // Follow-up for C1
+  if (step.followUp && val === step.followUp.trigger) {
+    html += renderFollowUp(step);
+  }
+
+  return html;
+}
+
+function renderScale(step, val, isUA) {
+  let html = '<div class="scale-row">';
+  for (const label of step.scaleLabels) {
+    const sel = val === label ? ' selected' : '';
+    html += `<div class="scale-btn${sel}" data-value="${escapeHtml(label)}">${label}</div>`;
+  }
+  html += '</div>';
+  html += '<div class="scale-labels">';
+  for (const label of step.scaleLabels) {
+    html += `<span>${label}</span>`;
+  }
+  html += '</div>';
+  if (!step.noUA) {
+    html += `<div style="margin-top:14px">
+      <div class="option-item ua-option${isUA ? ' selected' : ''}" data-value="__UNABLE_TO_ANSWER__">
+        <div class="option-radio"></div>
+        <div class="option-label" style="color:#999">无法回答</div>
+      </div>
+    </div>`;
+    html += renderUAExplain(step, isUA);
+  }
+  return html;
+}
+
+function renderMulti(step, val, isUA) {
+  const selected = Array.isArray(val) ? val : [];
+  let html = '<div class="option-list">';
+  for (const opt of step.options) {
+    const sel = selected.includes(opt) ? ' selected' : '';
+    html += `
+      <div class="option-item${sel}" data-value="${escapeHtml(opt)}">
+        <div class="option-check"></div>
+        <div class="option-label">${opt}</div>
+      </div>`;
+  }
+  if (!step.noUA) {
+    html += `
+      <div class="option-item ua-option${isUA ? ' selected' : ''}" data-value="__UNABLE_TO_ANSWER__">
+        <div class="option-check"></div>
+        <div class="option-label" style="color:#999">无法回答 / 我的答案不在选项中</div>
+      </div>`;
+  }
+  html += '</div>';
+  if (!step.noUA) html += renderUAExplain(step, isUA);
+  return html;
+}
+
+function renderSingle(step, val, isUA) {
+  let html = '<div class="option-list">';
+  for (const opt of step.options) {
+    const sel = val === opt ? ' selected' : '';
+    html += `
+      <div class="option-item${sel}" data-value="${escapeHtml(opt)}">
+        <div class="option-radio"></div>
+        <div class="option-label">${opt}</div>
+      </div>`;
+  }
+  if (!step.noUA) {
+    html += `
+      <div class="option-item ua-option${isUA ? ' selected' : ''}" data-value="__UNABLE_TO_ANSWER__">
+        <div class="option-radio"></div>
+        <div class="option-label" style="color:#999">无法回答 / 我的答案不在选项中</div>
+      </div>`;
+  }
+  html += '</div>';
+  if (!step.noUA) html += renderUAExplain(step, isUA);
+  return html;
+}
+
+function renderUAExplain(step, isUA) {
+  const explainVal = uaExplanations[step.id] || '';
+  return `
+    <div class="ua-explain${isUA ? ' visible' : ''}" id="ua-explain">
+      <input type="text" class="text-input-sm visible" id="ua-explain-input"
+        placeholder="如方便，请简要说明（选填）" value="${escapeHtml(explainVal)}">
+    </div>`;
+}
+
+function renderFollowUp(step) {
+  const fuVal = answers[step.id + '_fu'];
+  const fu = step.followUp;
+  let html = `<div class="follow-up visible"><div class="fu-title">${fu.title}</div><div class="option-list">`;
+  for (const opt of fu.options) {
+    const sel = fuVal === opt ? ' selected' : '';
+    html += `
+      <div class="option-item${sel}" data-value="${escapeHtml(opt)}" data-fu="true">
+        <div class="option-radio"></div>
+        <div class="option-label">${opt}</div>
+      </div>`;
+  }
+  html += `
+    <div class="option-item ua-option${fuVal === '__UNABLE_TO_ANSWER__' ? ' selected' : ''}"
+      data-value="__UNABLE_TO_ANSWER__" data-fu="true">
+      <div class="option-radio"></div>
+      <div class="option-label" style="color:#999">无法回答</div>
+    </div>`;
+  html += '</div></div>';
+  return html;
+}
+
+function renderRecruit() {
+  const phone = answers['_recruit_phone'] || '';
+  const avail = answers['_recruit_avail'] || [];
+  return `
+    <div class="step-title">📞 访谈招募（选填）</div>
+    <div class="step-subtitle">
+      如果您愿意接受一次约10分钟的简短访谈（线上或线下均可），帮助我们更深入了解您的看法，请留下联系方式。联系方式仅用于本次调研，不会外泄。
+    </div>
+    <div style="margin-top:16px">
+      <div style="font-size:14px;color:#666;margin-bottom:6px">微信 / 手机（选填）</div>
+      <input type="text" class="text-input" id="recruit-contact" value="${escapeHtml(phone)}"
+        placeholder="微信号或手机号">
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:14px;color:#666;margin-bottom:8px">方便联系的时间（可多选）</div>
+      <div class="option-list">
+        ${['工作日白天','工作日晚间','周末'].map(t => {
+          const sel = avail.includes(t) ? ' selected' : '';
+          return `<div class="option-item${sel}" data-value="${t}" data-req="true">
+            <div class="option-check"></div><div class="option-label">${t}</div></div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderThankYou() {
+  return `
+    <div class="hero" style="padding-top:60px">
+      <div class="hero-icon">✅</div>
+      <h1>提交成功</h1>
+      <p style="margin-top:12px">
+        感谢您花时间认真填写！<br><br>
+        您的每一条回答，都将帮助我们更真实地理解开放政策的影响，并推动校园管理向更好的方向发展。
+      </p>
+      <div id="submit-error" style="margin-top:20px;color:#e74c3c;font-size:13px;display:none">
+        ⚠️ 提交到服务器失败，但您的回答已保存在本地。<br>
+        请截图或复制下方数据发送给调研团队。
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+function bindEvents(step) {
+  if (step.type === 'welcome' || step.type === 'thankyou') return;
+
+  // Age input
+  if (step.type === 'age') {
+    const input = document.getElementById('age-input');
+    if (input) {
+      input.addEventListener('input', () => {
+        answers[step.id] = input.value;
+        updateNextButton(step);
+      });
+    }
+  }
+
+  // Text input
+  if (step.type === 'text') {
+    const input = document.getElementById('text-input');
+    if (input) {
+      input.addEventListener('input', () => {
+        answers[step.id] = input.value;
+        updateNextButton(step);
+      });
+    }
+  }
+
+  // Single choice options
+  if (step.type === 'single') {
+    document.querySelectorAll('.option-item[data-value]').forEach(el => {
+      el.addEventListener('click', () => handleSingleSelect(step, el.dataset.value));
+    });
+  }
+  // Scale options — separate element class (.scale-btn), needs its own listener
+  if (step.type === 'scale') {
+    document.querySelectorAll('.scale-btn[data-value]').forEach(el => {
+      el.addEventListener('click', () => handleSingleSelect(step, el.dataset.value));
+    });
+    // The "无法回答" button below the scale is an .option-item
+    document.querySelectorAll('.option-item[data-value]').forEach(el => {
+      el.addEventListener('click', () => handleSingleSelect(step, el.dataset.value));
+    });
+  }
+  // Multi choice options
+  if (step.type === 'multi') {
+    document.querySelectorAll('.option-item[data-value]').forEach(el => {
+      el.addEventListener('click', () => handleMultiSelect(step, el.dataset.value));
+    });
+  }
+
+  // Follow-up options
+  document.querySelectorAll('.option-item[data-fu="true"]').forEach(el => {
+    el.addEventListener('click', () => handleFollowUpSelect(step, el.dataset.value));
+  });
+
+  // Recruit
+  if (step.type === 'recruit') {
+    const contactInput = document.getElementById('recruit-contact');
+    if (contactInput) {
+      contactInput.addEventListener('input', () => {
+        answers['_recruit_phone'] = contactInput.value;
+      });
+    }
+    document.querySelectorAll('.option-item[data-req="true"]').forEach(el => {
+      el.addEventListener('click', () => handleRecruitAvail(el.dataset.value));
+    });
+  }
+
+  // UA explanation
+  const uaInput = document.getElementById('ua-explain-input');
+  if (uaInput) {
+    uaInput.addEventListener('input', () => {
+      uaExplanations[step.id] = uaInput.value;
+    });
+  }
+}
+
+function handleSingleSelect(step, value) {
+  if (value === '__UNABLE_TO_ANSWER__') {
+    if (answers[step.id] === '__UNABLE_TO_ANSWER__') {
+      // Deselect
+      answers[step.id] = null;
+    } else {
+      answers[step.id] = '__UNABLE_TO_ANSWER__';
+      if (step.followUp) delete answers[step.id + '_fu'];
+    }
+  } else {
+    if (answers[step.id] === value) {
+      // Deselect
+      answers[step.id] = null;
+    } else {
+      answers[step.id] = value;
+    }
+    // Clear follow-up if trigger changed
+    if (step.followUp && value !== step.followUp.trigger) {
+      delete answers[step.id + '_fu'];
+    }
+  }
+  render();
+}
+
+function handleMultiSelect(step, value) {
+  let selected = answers[step.id] || [];
+  if (!Array.isArray(selected)) selected = [];
+
+  if (value === '__UNABLE_TO_ANSWER__') {
+    if (selected.includes('__UNABLE_TO_ANSWER__')) {
+      answers[step.id] = [];
+    } else {
+      answers[step.id] = ['__UNABLE_TO_ANSWER__'];
+    }
+  } else {
+    // If UA was selected, clear it
+    selected = selected.filter(v => v !== '__UNABLE_TO_ANSWER__');
+
+    if (selected.includes(value)) {
+      selected = selected.filter(v => v !== value);
+    } else {
+      // For "都没见过" / "不需要加强" / "没有受到干扰" — exclusive selection
+      const exclusiveOptions = ['都没见过', '不需要加强', '没有受到干扰'];
+      if (exclusiveOptions.includes(value)) {
+        selected = [value];
+      } else {
+        // Remove exclusive options when selecting regular options
+        selected = selected.filter(v => !exclusiveOptions.includes(v));
+        selected.push(value);
+      }
+    }
+    answers[step.id] = selected;
+  }
+  render();
+}
+
+function handleFollowUpSelect(step, value) {
+  answers[step.id + '_fu'] = value;
+  render();
+}
+
+function handleRecruitAvail(value) {
+  let selected = answers['_recruit_avail'] || [];
+  if (!Array.isArray(selected)) selected = [];
+  if (selected.includes(value)) {
+    selected = selected.filter(v => v !== value);
+  } else {
+    selected.push(value);
+  }
+  answers['_recruit_avail'] = selected;
+  render();
+}
+
+function updateNextButton(step) {
+  if (!step || step.type === 'welcome' || step.type === 'thankyou') return;
+  if (step.type === 'recruit') { btnNext.disabled = false; return; }
+
+  const val = answers[step.id];
+  let valid = true;
+
+  if (step.type === 'age') {
+    const n = parseInt(val);
+    valid = !isNaN(n) && n >= 1 && n <= 120;
+    const errEl = document.getElementById('error-msg');
+    if (errEl) errEl.className = val && !valid ? 'error-msg visible' : 'error-msg';
+  } else if (step.required && (!val || (Array.isArray(val) && val.length === 0))) {
+    valid = false;
+  }
+
+  btnNext.disabled = step.required && !valid;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goNext() {
+  const step = allSteps[currentIdx];
+  if (step.type === 'welcome') { currentIdx++; render(); return; }
+  if (step.type === 'thankyou') return;
+
+  // Validate
+  if (step.type === 'age') {
+    const n = parseInt(answers[step.id]);
+    if (isNaN(n) || n < 1 || n > 120) {
+      const errEl = document.getElementById('error-msg');
+      if (errEl) errEl.className = 'error-msg visible';
+      return;
+    }
+  }
+
+  // Submit?
+  if (currentIdx === allSteps.length - 2) {
+    submitSurvey();
+    return;
+  }
+
+  // Re-resolve E-dim if we just passed Q1
+  if (step.id === 'Q1') {
+    // Clean up stale E-dimension data when identity changes
+    delete answers['E1'];
+    delete answers['E2'];
+    delete uaExplanations['E1'];
+    delete uaExplanations['E2'];
+    for (let i = currentIdx + 1; i < allSteps.length; i++) {
+      if (allSteps[i].type === 'e-dim') {
+        allSteps[i] = { type:'e-dim' }; // force re-resolve
+        break;
+      }
+    }
+  }
+
+  // If we just passed Q4 and C2 needs to be resolved
+  if (step.id === 'Q4') {
+    // Clean up stale C2 data when Q4 changes
+    delete answers['C2'];
+    delete uaExplanations['C2'];
+    let found = false;
+    for (let i = currentIdx + 1; i < allSteps.length; i++) {
+      if (allSteps[i].type === 'c2-conditional') {
+        allSteps[i] = { type:'c2-conditional' }; // force re-resolve
+        found = true;
+        break;
+      }
+    }
+    // If user changed Q4 from "否" to "是", C2 was spliced out — re-insert before G1
+    if (!found && answers['Q4'] === '是') {
+      for (let i = currentIdx + 1; i < allSteps.length; i++) {
+        if (allSteps[i].id === 'G1') {
+          allSteps.splice(i, 0, { type:'c2-conditional' });
+          break;
+        }
+      }
+    }
+  }
+
+  currentIdx++;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goPrev() {
+  if (currentIdx > 1) { // don't go back to welcome
+    currentIdx--;
+    render();
+    window.scrollTo(0, 0);
+  }
+}
+
+btnNext.addEventListener('click', goNext);
+btnPrev.addEventListener('click', goPrev);
+
+// ============================================================
+// SUBMIT
+// ============================================================
+function collectResponse() {
+  const resp = {
+    submitted_at: new Date().toISOString(),
+    answers: {},
+  };
+
+  // Collect all non-UI answers
+  for (const [key, val] of Object.entries(answers)) {
+    if (key.startsWith('_')) continue;
+    resp.answers[key] = val;
+  }
+
+  // Add UA explanations
+  resp.ua_explanations = { ...uaExplanations };
+
+  // Add recruit info
+  if (answers['_recruit_phone']) resp.recruit_phone = answers['_recruit_phone'];
+  if (answers['_recruit_avail'] && answers['_recruit_avail'].length > 0) {
+    resp.recruit_avail = answers['_recruit_avail'];
+  }
+
+  // Add metadata about which questions were shown
+  resp.meta = {
+    questions_shown: allSteps.filter(s => s.id).map(s => s.id),
+    c2_shown: allSteps.some(s => s.id === 'C2'),
+  };
+
+  return resp;
+}
+
+async function submitSurvey() {
+  if (submitted) return;
+  submitted = true;
+
+  // Visual feedback: disable button, show loading
+  btnNext.disabled = true;
+  btnNext.textContent = '提交中...';
+
+  const payload = collectResponse();
+
+  // Auto-detect backend: relative URL when served from Flask, localhost when opened as file
+  const BASE = window.SURVEY_BACKEND_URL || (window.location.protocol === 'file:' ? 'http://localhost:5000' : '');
+  const BACKEND_URL = BASE + '/api/submit';
+
+  let success = false;
+  try {
+    const res = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) success = true;
+  } catch (e) {
+    console.log('Backend not available, falling back to local');
+  }
+
+  // Save locally as backup
+  try {
+    const stored = JSON.parse(localStorage.getItem('whu_survey_responses') || '[]');
+    stored.push(payload);
+    localStorage.setItem('whu_survey_responses', JSON.stringify(stored));
+  } catch(e) {}
+
+  currentIdx++;
+  render();
+
+  // Show error if backend failed
+  if (!success) {
+    setTimeout(() => {
+      const errEl = document.getElementById('submit-error');
+      if (errEl) errEl.style.display = 'block';
+    }, 500);
+  }
+
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+allSteps = buildSteps();
+render();
+</script>
+</body>
+</html>
