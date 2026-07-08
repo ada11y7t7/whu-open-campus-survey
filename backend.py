@@ -16,7 +16,7 @@ Usage:
 Data is stored in survey_responses.jsonl (one JSON object per line).
 """
 
-from flask import Flask, request, jsonify, Response, send_from_directory
+from flask import Flask, request, jsonify, Response, send_from_directory, send_file
 import json
 import os
 from datetime import datetime
@@ -133,8 +133,8 @@ def qr_page():
   <h2>武汉大学开放入校政策调研</h2>
   <p>微信 / 浏览器扫码填写</p>
   <img src="/survey_qr.png" alt="问卷二维码">
-  <div class="url">{request.host_url}</div>
-  <div class="hint">同一 WiFi 下扫码即可访问</div>
+  <div class="url">{request.host_url.rstrip('/')}</div>
+  <div class="hint">扫码或点击上方链接即可填写</div>
 </div>
 </body>
 </html>'''
@@ -142,8 +142,22 @@ def qr_page():
 
 @app.route('/survey_qr.png')
 def serve_qr():
-    """Serve the QR code image."""
-    return send_from_directory(HERE, 'survey_qr.png')
+    """Dynamically generate QR code pointing to the current server URL."""
+    import io
+    try:
+        import qrcode
+        url = request.host_url.rstrip('/')
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=10, border=2)
+        qr.add_data(url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color='#1a1a2e', back_color='white')
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        buf.seek(0)
+        return send_file(buf, mimetype='image/png')
+    except ImportError:
+        # Fallback to static file if qrcode not installed
+        return send_from_directory(HERE, 'survey_qr.png')
 
 
 if __name__ == '__main__':
