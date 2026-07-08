@@ -17,13 +17,18 @@ Data is stored in survey_responses.jsonl (one JSON object per line).
 """
 
 from flask import Flask, request, jsonify, Response, send_from_directory
-from flask_cors import CORS
 import json
 import os
 from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)
+
+# CORS is optional (only needed when frontend is on a different origin)
+try:
+    from flask_cors import CORS
+    CORS(app)
+except ImportError:
+    pass
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'survey_responses.jsonl')
 
