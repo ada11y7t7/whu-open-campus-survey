@@ -52,7 +52,10 @@ PALETTE_IDENTITY = ['#1a5276','#2e86c1','#5dade2','#f39c12','#e74c3c','#95a5a6']
 # Question label mappings
 IDENTITY_LABELS = {
     '武汉大学本科生': '本科生', '武汉大学研究生': '研究生',
-    '武汉大学教职工': '教职工', '校友': '校友', '社会公众': '社会公众', '其他': '其他'
+    '武汉大学教职工': '教职工',
+    '该校本科生': '本科生', '该校研究生': '研究生',
+    '该校教职工': '教职工',
+    '校友': '校友', '社会公众': '社会公众', '其他': '其他'
 }
 
 # ============================================================
@@ -455,7 +458,7 @@ def build_report(responses, output_path):
     identity_groups = split_by_identity(responses)
     # B1 by identity
     b1_labels = ['非常支持', '比较支持', '一般', '不太支持', '完全不支持']
-    main_identities = ['武汉大学本科生', '武汉大学研究生', '社会公众', '校友']
+    main_identities = ['该校本科生', '该校研究生', '社会公众', '校友']
     cross_b1_groups = []
     for ident in main_identities:
         if ident in identity_groups:

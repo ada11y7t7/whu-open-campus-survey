@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta property="og:title" content="武汉大学开放入校政策影响调研">
-<meta property="og:description" content="关于武大取消入校预约后实际影响的匿名问卷">
-<title>武大开放入校政策影响调研</title>
+<meta property="og:title" content="大学校园开放政策影响调研">
+<meta property="og:description" content="关于大学校园开放政策实际影响的匿名调研问卷">
+<title>大学校园开放政策影响调研</title>
 <style>
 /* ===== Reset & Base ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -210,7 +210,7 @@ const BANK = {
     { id:'B3', type:'single', title:'如果要调整现行政策，您最希望优先解决什么问题？', options:['限制每日入校人流量','划定游客禁入区域（如图书馆、教学楼、宿舍区）','加强校内巡查和管理力度','设立游客专用通道或动线','增设明确的引导标识和信息提示','不需要调整','其他'] },
   ],
   C: [
-    { id:'C1', type:'single', title:'开放后，您进入武大校园（或在校园内活动）的频率是否发生变化？', options:['明显增加','略有增加','没变化','减少'], followUp:{ trigger:'减少', title:'减少的主要原因是？', options:['人太多，主动避开','安全顾虑','校园环境变差','与课程/工作无关，本来就不常来','其他'] } },
+    { id:'C1', type:'single', title:'开放后，您进入{学校}（或在校园内活动）的频率是否发生变化？', options:['明显增加','略有增加','没变化','减少'], followUp:{ trigger:'减少', title:'减少的主要原因是？', options:['人太多，主动避开','安全顾虑','校园环境变差','与课程/工作无关，本来就不常来','其他'] } },
     { id:'C3', type:'single', title:'您感觉外来人员带来的影响在什么时段最明显？', options:['周末及节假日','工作日','无明显时间区别','不清楚'] },
   ],
   D: [
@@ -218,12 +218,12 @@ const BANK = {
     { id:'D2', type:'multi', title:'您在校园内是否见过以下现象？<br><small style="color:#95a5a6">（本题了解客观现象，与是否对您造成困扰不同）</small>', options:['商业拍摄（婚纱、产品广告等）','网络直播','推销或散发传单','无人机飞行','大规模聚集拍照','游客进入教学楼/图书馆','都没见过'] },
     { id:'D3', type:'multi', title:'您认为目前校园管理在哪些方面最需要加强？', options:['游客引导与分流','人流总量控制','卫生清洁维护','安保巡逻力度','教学区/生活区的物理隔离（刷卡门禁）','游览路线规划与标识','线上/线下信息提示','商业行为管理（直播、拍摄、推销）','不需要加强','其他'] },
   ],
-  E1: { id:'E1', type:'single', title:'您来武汉大学的主要目的是什么？', options:['参观校园风光','感受大学文化氛围','拍照打卡','锻炼、散步、休闲','探访在校师生或朋友','参加校内活动（讲座、展览、招聘等）','借道通行','其他'] },
+  E1: { id:'E1', type:'single', title:'您来{学校}的主要目的是什么？', options:['参观校园风光','感受大学文化氛围','拍照打卡','锻炼、散步、休闲','探访在校师生或朋友','参加校内活动（讲座、展览、招聘等）','借道通行','其他'] },
   E2: { id:'E2', type:'multi', title:'据您观察，外来公众进入校园主要在做什么？', options:['参观校园风光','拍照打卡','锻炼、散步、休闲','带家人朋友游览','参加校内活动','商业行为（直播、拍摄、推销）','借道通行','不太清楚','其他'] },
   F: [
     { id:'F1', type:'single', title:'总体来看，您认为开放政策带来的影响是？', options:['利大于弊','略利于弊','利弊相当','略弊于利','弊大于利'] },
     { id:'F2', type:'single', title:'您是否希望继续保持目前的开放模式？', options:['愿意，保持现状即可','不愿意，应当收紧','视后续管理改善效果而定'] },
-    { id:'F3', type:'scale', title:'您认为武汉大学开放后，对武汉市的城市形象是否有积极作用？', scaleLabels:['非常消极','较消极','一般','较积极','非常积极'] },
+    { id:'F3', type:'scale', title:'您认为{学校}开放后，对所在城市的城市形象是否有积极作用？', scaleLabels:['非常消极','较消极','一般','较积极','非常积极'] },
   ],
 };
 
@@ -244,6 +244,12 @@ let uaExplanations = {};    // { questionId: "explanation text" }
 let allSteps = [];          // ordered list of step definition objects
 let currentIdx = 0;
 let submitted = false;
+let surveySchool = '武汉大学';  // default; set by Q0
+
+function t(text) {
+  // Replace school name placeholders in question text
+  return text.replace(/\{学校\}/g, surveySchool);
+}
 
 // ============================================================
 // BUILD STEPS
@@ -264,10 +270,16 @@ function buildSteps() {
   // --- Welcome ---
   steps.push({ type:'welcome' });
 
+  // --- School selection ---
+  steps.push({
+    id:'Q0', type:'school-select', title:'您想评价哪所学校的校园开放政策？', section:'学校选择',
+    required:true
+  });
+
   // --- Part 1: Basic Info ---
   steps.push({
-    id:'Q1', type:'single', title:'Q1. 您的身份是？', section:'基础信息',
-    options:['武汉大学本科生','武汉大学研究生','武汉大学教职工','校友','社会公众','其他'],
+    id:'Q1', type:'single', title:'Q1. 您在{学校}的身份是？', section:'基础信息',
+    options:['该校本科生','该校研究生','该校教职工','校友','社会公众','其他'],
     required:true
   });
   steps.push({
@@ -281,7 +293,7 @@ function buildSteps() {
     required:true, noUA:true  // "不愿透露" itself is the skip option
   });
   steps.push({
-    id:'Q4', type:'single', title:'Q4. 取消预约制<strong>之前</strong>，您是否来过武汉大学？', section:'基础信息',
+    id:'Q4', type:'single', title:'Q4. 取消预约制<strong>之前</strong>，您是否来过{学校}？', section:'基础信息',
     options:['是','否'],
     required:true
   });
@@ -327,10 +339,10 @@ function buildSteps() {
 // Resolve E-dimension question based on Q1 answer
 function resolveEQuestion() {
   const identity = answers['Q1'];
-  const isInsider = ['武汉大学本科生','武汉大学研究生','武汉大学教职工'].includes(identity);
+  const isInsider = ['该校本科生','该校研究生','该校教职工'].includes(identity);
   const eq = isInsider ? BANK.E2 : BANK.E1;
   return {
-    id: eq.id, type: eq.type, title: eq.title, options: eq.options,
+    id: eq.id, type: eq.type, title: t(eq.title), options: eq.options,
     section:'主题问卷', required:false
   };
 }
@@ -385,6 +397,8 @@ function render() {
     html = renderThankYou();
   } else if (resolvedStep.type === 'recruit') {
     html = renderRecruit();
+  } else if (resolvedStep.type === 'school-select') {
+    html = renderSchoolSelect(resolvedStep);
   } else if (resolvedStep.type === 'age') {
     html = renderAge(resolvedStep);
   } else if (resolvedStep.type === 'text') {
@@ -426,10 +440,11 @@ function renderWelcome() {
   return `
     <div class="hero">
       <div class="hero-icon">🏫</div>
-      <h1>武汉大学<br>开放入校政策影响调研</h1>
+      <h1>大学校园开放政策<br>影响调研</h1>
       <p style="margin-top:12px">
-        今年5月，武汉大学取消了社会公众入校预约制度，公众可凭身份证刷证入校。<br><br>
-        我们希望了解这一政策实施后的实际影响，为校园管理优化和相关研究提供参考。
+        近年来，越来越多大学调整了校园开放政策。<br><br>
+        我们希望了解这些政策实施后的实际影响，为校园管理优化和相关研究提供参考。<br><br>
+        问卷开始前，请先选择您要评价的学校。
       </p>
       <div class="notice">
         📌 <strong>填写说明</strong><br>
@@ -445,8 +460,8 @@ function renderWelcome() {
 function renderAge(step) {
   const val = answers[step.id] || '';
   return `
-    <div class="step-title">${step.title}</div>
-    ${step.subtitle ? `<div class="step-subtitle">${step.subtitle}</div>` : ''}
+    <div class="step-title">${t(step.title)}</div>
+    ${step.subtitle ? `<div class="step-subtitle">${t(step.subtitle)}</div>` : ''}
     <div class="age-wrap">
       <input type="number" class="age-input" id="age-input" value="${val}"
         placeholder="如 21" min="1" max="120" inputmode="numeric">
@@ -459,8 +474,8 @@ function renderAge(step) {
 function renderText(step) {
   const val = answers[step.id] || '';
   return `
-    <div class="step-title">${step.title}</div>
-    ${step.subtitle ? `<div class="step-subtitle">${step.subtitle}</div>` : ''}
+    <div class="step-title">${t(step.title)}</div>
+    ${step.subtitle ? `<div class="step-subtitle">${t(step.subtitle)}</div>` : ''}
     <textarea class="text-input" id="text-input" rows="3"
       placeholder="${step.placeholder || '请输入...'}">${val}</textarea>
   `;
@@ -475,8 +490,8 @@ function typeBadge(type) {
 function renderChoice(step) {
   const val = answers[step.id];
   const isUA = val === '__UNABLE_TO_ANSWER__';
-  let html = `<div class="step-title">${step.title}${typeBadge(step.type)}</div>`;
-  if (step.subtitle) html += `<div class="step-subtitle">${step.subtitle}</div>`;
+  let html = `<div class="step-title">${t(step.title)}${typeBadge(step.type)}</div>`;
+  if (step.subtitle) html += `<div class="step-subtitle">${t(step.subtitle)}</div>`;
 
   if (step.type === 'scale') {
     html += renderScale(step, val, isUA);
@@ -594,6 +609,28 @@ function renderFollowUp(step) {
   return html;
 }
 
+function renderSchoolSelect(step) {
+  const val = answers[step.id];
+  const otherName = answers['Q0_other'] || '';
+  return `
+    <div class="step-title">${t(step.title)}</div>
+    <div class="option-list">
+      <div class="option-item${val === '武汉大学' ? ' selected' : ''}" data-value="武汉大学">
+        <div class="option-radio"></div>
+        <div class="option-label">武汉大学</div>
+      </div>
+      <div class="option-item${val === '其他学校' ? ' selected' : ''}" data-value="其他学校">
+        <div class="option-radio"></div>
+        <div class="option-label">其他学校</div>
+      </div>
+    </div>
+    <div class="ua-explain${val === '其他学校' ? ' visible' : ''}" id="q0-other-wrap" style="margin-top:12px;">
+      <input type="text" class="text-input" id="q0-other-input"
+        placeholder="请输入学校全称，如'华中科技大学'" value="${escapeHtml(otherName)}">
+    </div>
+  `;
+}
+
 function renderRecruit() {
   const phone = answers['_recruit_phone'] || '';
   const avail = answers['_recruit_avail'] || [];
@@ -642,6 +679,36 @@ function renderThankYou() {
 // ============================================================
 function bindEvents(step) {
   if (step.type === 'welcome' || step.type === 'thankyou') return;
+
+  // School select
+  if (step.type === 'school-select') {
+    document.querySelectorAll('.option-item[data-value]').forEach(el => {
+      el.addEventListener('click', () => {
+        answers[step.id] = el.dataset.value;
+        if (el.dataset.value === '武汉大学') {
+          surveySchool = '武汉大学';
+          delete answers['Q0_other'];
+        } else {
+          delete answers['Q0_other']; // will be set by input
+        }
+        render();
+      });
+    });
+    const otherInput = document.getElementById('q0-other-input');
+    if (otherInput) {
+      otherInput.addEventListener('input', () => {
+        answers['Q0_other'] = otherInput.value;
+        if (otherInput.value) {
+          surveySchool = otherInput.value;
+        }
+        updateNextButton(step);
+      });
+      // Focus the input when "其他学校" is selected
+      if (answers[step.id] === '其他学校') {
+        setTimeout(() => otherInput.focus(), 100);
+      }
+    }
+  }
 
   // Age input
   if (step.type === 'age') {
@@ -792,6 +859,15 @@ function updateNextButton(step) {
   if (!step || step.type === 'welcome' || step.type === 'thankyou') return;
   if (step.type === 'recruit') { btnNext.disabled = false; return; }
 
+  if (step.type === 'school-select') {
+    const val = answers[step.id];
+    let valid = false;
+    if (val === '武汉大学') valid = true;
+    if (val === '其他学校' && answers['Q0_other'] && answers['Q0_other'].trim()) valid = true;
+    btnNext.disabled = !valid;
+    return;
+  }
+
   const val = answers[step.id];
   let valid = true;
 
@@ -829,6 +905,18 @@ function goNext() {
   if (currentIdx === allSteps.length - 2) {
     submitSurvey();
     return;
+  }
+
+  // Set school name when passing Q0
+  if (step.id === 'Q0') {
+    if (answers['Q0'] === '武汉大学') {
+      surveySchool = '武汉大学';
+    } else if (answers['Q0'] === '其他学校' && answers['Q0_other']) {
+      surveySchool = answers['Q0_other'];
+    }
+    // Clean up all dependent answers if school changed
+    // (invalidate old answers since they were about a different school)
+    answers['Q0_school'] = surveySchool; // record final school name
   }
 
   // Re-resolve E-dim if we just passed Q1
@@ -912,6 +1000,7 @@ function collectResponse() {
 
   // Add metadata about which questions were shown
   resp.meta = {
+    school: surveySchool,
     questions_shown: allSteps.filter(s => s.id).map(s => s.id),
     c2_shown: allSteps.some(s => s.id === 'C2'),
   };
